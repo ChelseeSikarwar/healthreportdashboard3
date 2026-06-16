@@ -2404,10 +2404,10 @@ function renderAddMetrics(w){
     // Communication section — ALL weeks, Target + Achieved columns
     html += '<tr><td colspan="11" style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--yellow);text-transform:uppercase;letter-spacing:.8px;background:var(--yellow-soft);border:1px solid var(--border2)">🟡 Client Communication — 20% weight (all weeks editable)</td></tr>';
     var commMetrics = [
-      {label:'Timely Reporting (%)',  id:'kc-tr', tip:'Target: 95%',  defaultTarget:95},
-      {label:'Client Escalations',    id:'kc-ce', tip:'Target: 0',     defaultTarget:0},
-      {label:'Task Completion (%)',   id:'kc-tc', tip:'Target: 90%',  defaultTarget:90},
-      {label:'Project Delivery (%)',  id:'kc-pd', tip:'Target: 90%',  defaultTarget:90}
+      {label:'Timely Reporting (%)',  id:'kc-tr', tip:'Basecamp · Before 7th',  defaultTarget:95},
+      {label:'Client Escalations',    id:'kc-ce', tip:'Escalation Sheet · Target: 0', defaultTarget:0},
+      {label:'Task Completion (%)',   id:'kc-tc', tip:'Basecamp · Target: 80%', defaultTarget:80},
+      {label:'Project Delivery (%)',  id:'kc-pd', tip:'Basecamp · Target: 80%', defaultTarget:80}
     ];
     commMetrics.forEach(function(m){
       html += '<tr>';
