@@ -2961,19 +2961,22 @@ async function autoFetchGSCDirect(siteUrl, cid){
 // ══════════════════════════════════════════
 // DOMAIN RESOLVER — auto-detect domain for any project
 // ══════════════════════════════════════════
+function cleanDomain(s){
+  return String(s||'').replace(/https?:\/\//,'').replace(/^www\./,'').replace(/\/.*$/,'').replace(/\/$/,'').trim();
+}
 function getProjectDomain(d){
   const keys = d.apiKeys || {};
-  // Priority 1: GSC URL (most reliable)
-  if(keys.gsc && keys.gsc.length > 4){
-    return keys.gsc.replace(/https?:\/\//,'').replace(/\/$/,'').replace(/\/.*$/,'');
-  }
-  // Priority 2: SEMrush domain field
+  // Priority 1: SEMrush domain field (most explicit)
   if(keys.semrushDomain && keys.semrushDomain.length > 3){
-    return keys.semrushDomain.trim();
+    return cleanDomain(keys.semrushDomain);
+  }
+  // Priority 2: GSC URL
+  if(keys.gsc && keys.gsc.length > 4){
+    return cleanDomain(keys.gsc);
   }
   // Priority 3: Website URL saved on project
   if(d.url && d.url.length > 4){
-    return d.url.replace(/https?:\/\//,'').replace(/\/$/,'').replace(/\/.*$/,'');
+    return cleanDomain(d.url);
   }
   // Priority 4: Guess from project name — lowercase, remove spaces, add .com
   // e.g. "Solarwakeup" → "solarwakeup.com", "Language Academy AU" → "languageacademy.com"
