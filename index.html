@@ -482,6 +482,7 @@ tbody td{padding:10px 13px;font-size:13px}
 <script>
 // ── HARDCODED API KEYS ──
 const PAGESPEED_API_KEY = 'AIzaSyCV1XFEPBijWUQlAKjWE54nfPtlbV6CymA';
+const SERP_API_KEY = 'ea6cf12391c1d0183efe328c1de9a42acc1541d7ffb3d7beeb965c56b180bbea';
 const SEMRUSH_API_KEY = '61b5d6f509d57c3b7671d431ac5d7306';
 const APPS_SCRIPT_BRIDGE = 'https://semrush-proxy-4115.onrender.com';
 
@@ -2557,6 +2558,8 @@ function renderAddMetrics(w){
     const promises=[];
     // PageSpeed — always direct
     if(autoDomain&&PAGESPEED_API_KEY)promises.push(autoFetchPageSpeed(autoDomain));
+    // Rich Results Test via SerpAPI proxy
+    if(autoDomain&&SERP_API_KEY)promises.push(autoFetchRichResults(autoDomain,cid));
     // SEMrush — always direct CORS proxy (bridge disabled)
     if(autoDomain&&SEMRUSH_API_KEY)promises.push(autoFetchSEMrush(autoDomain,cid));
     // GA4 + GSC — use Google OAuth token
@@ -3612,6 +3615,50 @@ function navMetricsForClient(id){
 // ══════════════════════════════════════════
 // TOAST
 // ══════════════════════════════════════════
+async function autoFetchRichResults(domain, cid){
+  const showStatus = (msg, type) => {
+    const apiDiv = document.getElementById('me-fetch-results')||document.getElementById('me-api-status');
+    if(!apiDiv) return;
+    const colors = {
+      loading:{bg:'var(--blue-soft)',border:'var(--blue-border)',color:'var(--blue)'},
+      ok:{bg:'var(--green-soft)',border:'var(--green-border)',color:'var(--green)'},
+      warn:{bg:'var(--yellow-soft)',border:'var(--yellow-border)',color:'var(--yellow)'},
+    };
+    const c = colors[type]||colors.loading;
+    let el = document.getElementById('richresults-status');
+    if(!el){ el=document.createElement('div'); el.id='richresults-status'; apiDiv.appendChild(el); }
+    el.style.cssText='background:'+c.bg+';border:1px solid '+c.border+';border-radius:8px;padding:9px 13px;font-size:12px;color:'+c.color+';margin-top:6px';
+    el.innerHTML=msg;
+  };
+
+  showStatus('⏳ Fetching Rich Results / Structured Data for <strong>'+domain+'</strong>...','loading');
+  const _selWeek = parseInt((document.getElementById('me-week')||{}).value)||1;
+
+  try {
+    const siteUrl = 'https://www.'+domain+'/';
+    const proxyUrl = APPS_SCRIPT_BRIDGE.replace('/exec','').replace('https://script.google.com/a/macros/evendigit.com/s/AKfycbwbjF-pfOWAxDqo7Nofk1aIM3qu1nRnxeGK5tMMBAWpVslBGJNOGq16XIa6zmUROX1bqw','https://semrush-proxy-4115.onrender.com');
+    const url = 'https://semrush-proxy-4115.onrender.com/rich-results?url='+encodeURIComponent(siteUrl)+'&serpKey='+encodeURIComponent(SERP_API_KEY);
+    
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const json = await res.json();
+    
+    if(!json.success) throw new Error(json.error||'Failed');
+
+    const errors = json.structuredDataErrors || 0;
+    const el = document.getElementById('kq-sd-a'+_selWeek);
+    if(el) el.value = errors;
+
+    const allData = getData();
+    const idx = allData.findIndex(x=>x.id===cid);
+    if(idx>=0){ if(!allData[idx].kpi)allData[idx].kpi={}; allData[idx].kpi.structuredData=errors; saveData(allData); }
+
+    showStatus('✅ Rich Results fetched — Structured Data Errors: '+errors,'ok');
+  } catch(e) {
+    showStatus('⚠️ Rich Results: '+e.message,'warn');
+  }
+}
+
 function toggleExportMenu(e){e.stopPropagation();const m=document.getElementById('export-menu');m.style.display=m.style.display==='none'?'block':'none';}
 function closeExportMenu(){const m=document.getElementById('export-menu');if(m)m.style.display='none';}
 document.addEventListener('click',function(){closeExportMenu();});
