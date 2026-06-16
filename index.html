@@ -3065,41 +3065,24 @@ async function autoFetchSEMrush(domain, cid){
     const idx = allData.findIndex(x => x.id === cid);
     if(idx >= 0 && !allData[idx].kpi) allData[idx].kpi = {};
 
-    if(d.authorityScore != null){
-      const el = document.getElementById('kp-as-a'+_selWeek); if(el) el.value = d.authorityScore;
-      results.push('Authority Score: '+d.authorityScore);
-      if(idx>=0) allData[idx].kpi.authorityScore = d.authorityScore;
-    }
-    if(d.organicKeywords != null){
-      const el = document.getElementById('me-kw-a'+_selWeek); if(el) el.value = d.organicKeywords;
-      results.push('Organic KW: '+d.organicKeywords.toLocaleString());
-      if(idx>=0) allData[idx].keywords = d.organicKeywords;
-    }
-    if(d.organicTraffic != null && d.organicTraffic > 0){
-      const el = document.getElementById('me-tr-a'+_selWeek); if(el) el.value = d.organicTraffic;
-      results.push('Traffic: '+d.organicTraffic.toLocaleString());
-      if(idx>=0) allData[idx].traffic = d.organicTraffic;
-    }
-    if(d.backlinks != null){
-      const el = document.getElementById('kq-bk-a'+_selWeek); if(el) el.value = d.backlinks;
-      results.push('Backlinks: '+d.backlinks.toLocaleString());
-      if(idx>=0) allData[idx].kpi.backlinks = d.backlinks;
-    }
-    if(d.referringDomains != null){
-      const el = document.getElementById('kq-rd-a'+_selWeek); if(el) el.value = d.referringDomains;
-      results.push('Ref Domains: '+d.referringDomains.toLocaleString());
-      if(idx>=0) allData[idx].kpi.referringDomains = d.referringDomains;
-    }
-    if(d.spamScore != null){
-      const el = document.getElementById('kq-ss-a'+_selWeek); if(el) el.value = d.spamScore;
-      results.push('Spam Score: '+d.spamScore);
-      if(idx>=0) allData[idx].kpi.spamScore = d.spamScore;
-    }
-    if(d.websiteHealth != null){
-      const el = document.getElementById('kq-wh-a'+_selWeek); if(el) el.value = d.websiteHealth;
-      results.push('Site Health: '+d.websiteHealth+'%');
-      if(idx>=0) allData[idx].kpi.websiteHealth = d.websiteHealth;
-    }
+    // Fill all SEMrush metrics into the achieved columns
+    const fillMetric = (elId, val, label, store, storeKey) => {
+      if(val == null) return;
+      const el = document.getElementById(elId+'-a'+_selWeek);
+      if(el) el.value = val;
+      results.push(label+': '+(typeof val==='number'&&val>999?val.toLocaleString():val));
+      if(idx>=0 && store) allData[idx][store] = storeKey ? (allData[idx][store]||{}) : val;
+      if(idx>=0 && storeKey) { if(!allData[idx].kpi) allData[idx].kpi={}; allData[idx].kpi[storeKey] = val; }
+    };
+
+    fillMetric('kp-as',  d.authorityScore,   'Authority Score', null,      'authorityScore');
+    fillMetric('me-kw',  d.organicKeywords,  'Organic KW',     'keywords', null);
+    fillMetric('me-tr',  d.organicTraffic,   'Traffic',        'traffic',  null);
+    fillMetric('kq-bk',  d.backlinks,        'Backlinks',      null,       'backlinks');
+    fillMetric('kq-rd',  d.referringDomains, 'Ref Domains',    null,       'referringDomains');
+    fillMetric('kq-ss',  d.spamScore,        'Spam Score',     null,       'spamScore');
+    fillMetric('kq-ok',  d.organicKeywords,  'Organic KW (Q)', null,       'organicKeywords');
+    fillMetric('kq-wh',  d.websiteHealth,    'Site Health',    null,       'websiteHealth');
     if(idx >= 0) saveData(allData);
 
     if(results.length){
