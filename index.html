@@ -3105,8 +3105,7 @@ async function autoFetchSEMrush(domain, cid){
     if(results.length){
       showStatus('✅ SEMrush fetched — '+results.join(' · '),'ok');
     } else {
-      const rawInfo = d._raw ? ' | Raw: '+JSON.stringify(d._raw) : '';
-      showStatus('⚠️ SEMrush: no data for <strong>'+domain+'</strong>'+rawInfo,'warn');
+      showStatus('⚠️ SEMrush: no data for <strong>'+domain+'</strong> | Full response: '+JSON.stringify(d),'warn');
     }
 
   } catch(e) {
