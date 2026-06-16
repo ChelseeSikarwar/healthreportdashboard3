@@ -3102,7 +3102,8 @@ async function autoFetchSEMrush(domain, cid){
     if(results.length){
       showStatus('✅ SEMrush fetched — '+results.join(' · '),'ok');
     } else {
-      showStatus('⚠️ SEMrush bridge connected but no data for <strong>'+domain+'</strong>. Check domain in Edit Project → API Keys.','warn');
+      const rawInfo = d._raw ? ' | Raw: '+JSON.stringify(d._raw) : '';
+      showStatus('⚠️ SEMrush: no data for <strong>'+domain+'</strong>'+rawInfo,'warn');
     }
 
   } catch(e) {
