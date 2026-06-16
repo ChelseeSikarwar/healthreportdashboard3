@@ -1436,10 +1436,10 @@ function showMonthDetail(projId, histIdx, monthName){
       {label:'Desktop Speed',val:wkData['kq-ds']||null,target:null},
       {label:'Mobile Speed',val:wkData['kq-ms']||null,target:null},
       {label:'Backlinks',val:wkData['kq-bk']||null,target:wkData['kq-bk_t']||null},
-      {label:'Timely Reporting',val:wkData['kc-tr']||null,target:null,unit:'%'},
-      {label:'Task Completion',val:wkData['kc-tc']||null,target:null,unit:'%'},
-      {label:'Client Escalations',val:wkData['kc-ce']||null,target:null},
-      {label:'Project Delivery',val:wkData['kc-pd']||null,target:null,unit:'%'},
+      {label:'Timely Reporting',val:wkData['kc-tr']||null,target:wkData['kc-tr_t']!=null?wkData['kc-tr_t']:95,unit:'%'},
+      {label:'Task Completion',val:wkData['kc-tc']||null,target:wkData['kc-tc_t']!=null?wkData['kc-tc_t']:90,unit:'%'},
+      {label:'Client Escalations',val:wkData['kc-ce']||null,target:wkData['kc-ce_t']!=null?wkData['kc-ce_t']:0},
+      {label:'Project Delivery',val:wkData['kc-pd']||null,target:wkData['kc-pd_t']!=null?wkData['kc-pd_t']:90,unit:'%'},
     ].filter(m=>m.val!==null&&m.val!==undefined&&m.val!=='');
 
     weeksHtml+=`<div style="background:${hasData?'#fff':wkGcs};border:1px solid var(--border${hasData?'2':''});border-radius:10px;padding:14px;border-top:3px solid ${hasData?wkGc:'var(--bg4)'}">
@@ -2401,23 +2401,35 @@ function renderAddMetrics(w){
     html += '<tr><td colspan="11" style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.8px;background:var(--green-soft);border:1px solid var(--border2)">🟢 Performance Parameters — 50% weight</td></tr>';
     perfMetrics.forEach(function(m){ html += metricRow(m); });
 
-    // Communication section — ALL weeks editable
-    html += '<tr><td colspan="11" style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--yellow);text-transform:uppercase;letter-spacing:.8px;background:var(--yellow-soft);border:1px solid var(--border2)">🟡 Client Communication — 20% weight (all weeks editable — active week highlighted)</td></tr>';
+    // Communication section — ALL weeks, Target + Achieved columns
+    html += '<tr><td colspan="11" style="padding:7px 10px;font-size:10px;font-weight:700;color:var(--yellow);text-transform:uppercase;letter-spacing:.8px;background:var(--yellow-soft);border:1px solid var(--border2)">🟡 Client Communication — 20% weight (all weeks editable)</td></tr>';
     var commMetrics = [
-      {label:'Timely Reporting (%)', id:'kc-tr'},
-      {label:'Client Escalations', id:'kc-ce'},
-      {label:'Task Completion (%)', id:'kc-tc'},
-      {label:'Project Delivery (%)', id:'kc-pd'}
+      {label:'Timely Reporting (%)',  id:'kc-tr', tip:'Target: 95%',  defaultTarget:95},
+      {label:'Client Escalations',    id:'kc-ce', tip:'Target: 0',     defaultTarget:0},
+      {label:'Task Completion (%)',   id:'kc-tc', tip:'Target: 90%',  defaultTarget:90},
+      {label:'Project Delivery (%)',  id:'kc-pd', tip:'Target: 90%',  defaultTarget:90}
     ];
     commMetrics.forEach(function(m){
       html += '<tr>';
-      html += '<td style="padding:7px 10px;font-size:12px;font-weight:500;border:1px solid var(--border2);background:#fff">'+m.label+'</td>';
+      html += '<td style="padding:7px 10px;font-size:12px;font-weight:500;border:1px solid var(--border2);background:#fff;white-space:nowrap">'
+            + '<div>'+m.label+'</div>'
+            + '<div style="font-size:9px;color:var(--text4)">'+m.tip+'</div>'
+            + '</td>';
       WEEKS.forEach(function(wk){
         var isAct = (wk === selectedWeek);
-        var bg = isAct ? 'var(--yellow-soft)' : '#fffdf0';
-        var border = isAct ? 'var(--yellow-border)' : '#f0e8a0';
-        html += '<td colspan="2" style="padding:4px 6px;border:1px solid var(--border2);background:'+bg+'">'
-             + '<input type="number" id="'+m.id+'-w'+wk+'" placeholder="Enter" oninput="autoUpdateGrade()" style="width:100%;border:1px solid '+border+';border-radius:4px;padding:4px 6px;font-size:11px;background:#fff;text-align:center">'
+        var tBg     = isAct ? 'var(--blue-soft)'   : '#f8faff';
+        var aBg     = isAct ? 'var(--yellow-soft)'  : '#fffdf0';
+        var tBorder = isAct ? 'var(--blue-border)'  : '#c8d8f0';
+        var aBorder = isAct ? 'var(--yellow-border)': '#f0e8a0';
+        // Target cell — uses kc-tr-t{wk} pattern
+        html += '<td style="padding:3px 4px;border:1px solid var(--border2);background:'+tBg+'">'
+             + '<input type="number" id="'+m.id+'-t'+wk+'" value="'+m.defaultTarget+'" placeholder="Target"'
+             + ' style="width:100%;border:1px solid '+tBorder+';border-radius:4px;padding:4px 5px;font-size:11px;background:#fff;text-align:center">'
+             + '</td>';
+        // Achieved cell — uses kc-tr-w{wk} pattern (kept for backward compat restore)
+        html += '<td style="padding:3px 4px;border:1px solid var(--border2);background:'+aBg+'">'
+             + '<input type="number" id="'+m.id+'-w'+wk+'" placeholder="—" oninput="autoUpdateGrade()"'
+             + ' style="width:100%;border:1px solid '+aBorder+';border-radius:4px;padding:4px 5px;font-size:11px;background:#fff;text-align:center">'
              + '</td>';
       });
       html += '</tr>';
@@ -2625,7 +2637,7 @@ function prefillAllWeeks(cid){
     if(el)el.value=val;
   };
 
-  const commKeys=new Set(['kc-tr','kc-ce','kc-tc','kc-pd']);
+  const commKeys=new Set(['kc-tr','kc-ce','kc-tc','kc-pd','kc-tr_t','kc-ce_t','kc-tc_t','kc-pd_t']);
 
   for(let wk=1;wk<=5;wk++){
     const wkData=weeklyKpis['w'+wk]||{};
@@ -2647,11 +2659,16 @@ function prefillAllWeeks(cid){
     const badge=document.getElementById('week-saved-badge-'+wk);
     if(badge)badge.style.display=hasRealData?'block':'none';
 
-    // Comm fields — per week IDs: kc-tr-w{wk}
+    // Comm fields — achieved: kc-tr-w{wk}, target: kc-tr-t{wk}
     setEl('kc-tr-w'+wk, wkData['kc-tr']!=null?wkData['kc-tr']:(wk===selectedWeek&&k.timelyReporting!=null?k.timelyReporting:null));
     setEl('kc-ce-w'+wk, wkData['kc-ce']!=null?wkData['kc-ce']:(wk===selectedWeek&&k.clientEscalations!=null?k.clientEscalations:null));
     setEl('kc-tc-w'+wk, wkData['kc-tc']!=null?wkData['kc-tc']:(wk===selectedWeek&&k.taskCompletion!=null?k.taskCompletion:null));
     setEl('kc-pd-w'+wk, wkData['kc-pd']!=null?wkData['kc-pd']:(wk===selectedWeek&&k.projectDelivery!=null?k.projectDelivery:null));
+    // Comm targets (saved values override defaults)
+    if(wkData['kc-tr_t']!=null) setEl('kc-tr-t'+wk, wkData['kc-tr_t']);
+    if(wkData['kc-ce_t']!=null) setEl('kc-ce-t'+wk, wkData['kc-ce_t']);
+    if(wkData['kc-tc_t']!=null) setEl('kc-tc-t'+wk, wkData['kc-tc_t']);
+    if(wkData['kc-pd_t']!=null) setEl('kc-pd-t'+wk, wkData['kc-pd_t']);
     setEl('me-notes-w'+wk, wkData['notes']||(wk===selectedWeek?d.notes||null:null));
 
     // Grade badge for non-active weeks
@@ -2697,12 +2714,17 @@ function saveWeekMetrics(wk){
     }
   });
 
-  // Save comm fields for THIS week (new per-week IDs: kc-tr-w{wk})
+  // Save comm fields — achieved (kc-tr-w{wk}) and target (kc-tr-t{wk})
   const vv=(id)=>{const el=document.getElementById(id);if(!el)return null;const v=parseFloat(el.value);return isNaN(v)?null:v;};
   const tr=vv('kc-tr-w'+wk);if(tr!==null)wkStore['kc-tr']=tr;
   const ce=vv('kc-ce-w'+wk);if(ce!==null)wkStore['kc-ce']=ce;
   const tc=vv('kc-tc-w'+wk);if(tc!==null)wkStore['kc-tc']=tc;
   const pd=vv('kc-pd-w'+wk);if(pd!==null)wkStore['kc-pd']=pd;
+  // Save comm targets
+  const trT=vv('kc-tr-t'+wk);if(trT!==null)wkStore['kc-tr_t']=trT;
+  const ceT=vv('kc-ce-t'+wk);if(ceT!==null)wkStore['kc-ce_t']=ceT;
+  const tcT=vv('kc-tc-t'+wk);if(tcT!==null)wkStore['kc-tc_t']=tcT;
+  const pdT=vv('kc-pd-t'+wk);if(pdT!==null)wkStore['kc-pd_t']=pdT;
   const n=(document.getElementById('me-notes-w'+wk)||{}).value||'';
   if(n)wkStore['notes']=n;
 
@@ -3333,7 +3355,7 @@ function autoUpdateGrade(){
   const va=(id)=>v(id+'-a'+sw);
   const vt=(id)=>v(id+'-t'+sw);
   const vc=(id)=>v(id+'-w'+sw); // comm fields
-  const tmp={traffic:va('me-tr')||0,trafficT:vt('me-tr')||0,leads:va('me-ld')||0,leadsT:vt('me-ld')||0,keywords:va('me-kw')||0,keywordsT:vt('me-kw')||0,roas:va('me-roas')||0,adSpend:va('me-sp')||0,kpi:{impressions:va('kp-imp')||0,impressionsT:vt('kp-imp')||0,authorityScore:va('kp-as')||0,authorityScoreT:vt('kp-as')||0,websiteHealth:va('kq-wh')||0,websiteHealthT:vt('kq-wh')||0,desktopSpeed:va('kq-ds')||0,desktopSpeedT:vt('kq-ds')||0,mobileSpeed:va('kq-ms')||0,mobileSpeedT:vt('kq-ms')||0,structuredData:va('kq-sd'),brokenLinks:va('kq-bl'),engagementRate:va('kq-er')||0,engagementRateT:vt('kq-er')||0,spamScore:va('kq-ss'),referringDomains:va('kq-rd')||0,referringDomainsT:vt('kq-rd')||0,backlinks:va('kq-bk')||0,backlinksT:vt('kq-bk')||0,timelyReporting:vc('kc-tr'),clientEscalations:vc('kc-ce'),taskCompletion:vc('kc-tc'),projectDelivery:vc('kc-pd')}};
+  const tmp={traffic:va('me-tr')||0,trafficT:vt('me-tr')||0,leads:va('me-ld')||0,leadsT:vt('me-ld')||0,keywords:va('me-kw')||0,keywordsT:vt('me-kw')||0,roas:va('me-roas')||0,adSpend:va('me-sp')||0,kpi:{impressions:va('kp-imp')||0,impressionsT:vt('kp-imp')||0,authorityScore:va('kp-as')||0,authorityScoreT:vt('kp-as')||0,websiteHealth:va('kq-wh')||0,websiteHealthT:vt('kq-wh')||0,desktopSpeed:va('kq-ds')||0,desktopSpeedT:vt('kq-ds')||0,mobileSpeed:va('kq-ms')||0,mobileSpeedT:vt('kq-ms')||0,structuredData:va('kq-sd'),brokenLinks:va('kq-bl'),engagementRate:va('kq-er')||0,engagementRateT:vt('kq-er')||0,spamScore:va('kq-ss'),referringDomains:va('kq-rd')||0,referringDomainsT:vt('kq-rd')||0,backlinks:va('kq-bk')||0,backlinksT:vt('kq-bk')||0,timelyReporting:vc('kc-tr'),clientEscalations:vc('kc-ce'),taskCompletion:vc('kc-tc'),projectDelivery:vc('kc-pd'),timelyReportingT:vt('kc-tr'),clientEscalationsT:vt('kc-ce'),taskCompletionT:vt('kc-tc'),projectDeliveryT:vt('kc-pd')}};
   const sc=calcScore(tmp);
   const g=sc>=255?'A':sc>=210?'B':'C';
   MeG=g;
